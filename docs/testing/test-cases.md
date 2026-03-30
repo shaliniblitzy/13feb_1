@@ -722,10 +722,186 @@ The application processes **one Date of Birth per execution**. Re-run the applic
 
 ---
 
+## Normal Calculator Test Cases
+
+The following test cases verify the correctness of the Normal Calculator (`src/Calculator.java`). The calculator supports four arithmetic operations with input validation and error handling.
+
+### Test Case TC-C01: Addition
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | TC-C01 |
+| **Scenario** | User performs addition of two integers |
+| **Category** | ✅ Normal Operation |
+| **Input** | First number: `10`, Second number: `5`, Operator: `+` |
+
+**Expected Output:**
+
+```
+Result: 10 + 5 = 15
+```
+
+**Pass Criteria:** Application correctly adds the two numbers and displays the result.
+
+---
+
+### Test Case TC-C02: Subtraction
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | TC-C02 |
+| **Scenario** | User performs subtraction |
+| **Category** | ✅ Normal Operation |
+| **Input** | First number: `20`, Second number: `4`, Operator: `-` |
+
+**Expected Output:**
+
+```
+Result: 20 - 4 = 16
+```
+
+---
+
+### Test Case TC-C03: Multiplication
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | TC-C03 |
+| **Scenario** | User performs multiplication |
+| **Category** | ✅ Normal Operation |
+| **Input** | First number: `6`, Second number: `7`, Operator: `*` |
+
+**Expected Output:**
+
+```
+Result: 6 * 7 = 42
+```
+
+---
+
+### Test Case TC-C04: Division
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | TC-C04 |
+| **Scenario** | User performs division with a non-integer result |
+| **Category** | ✅ Normal Operation |
+| **Input** | First number: `15`, Second number: `4`, Operator: `/` |
+
+**Expected Output:**
+
+```
+Result: 15 / 4 = 3.75
+```
+
+---
+
+### Test Case TC-C05: Division by Zero
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | TC-C05 |
+| **Scenario** | User attempts to divide by zero |
+| **Category** | ❌ Error Handling |
+| **Input** | First number: `10`, Second number: `0`, Operator: `/` |
+
+**Expected Output:**
+
+```
+Error: Division by zero is not allowed.
+```
+
+**Pass Criteria:** Application rejects the division and displays a clear error message. No crash or `Infinity` result.
+
+---
+
+### Test Case TC-C06: Invalid Number Input
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | TC-C06 |
+| **Scenario** | User enters non-numeric text as a number |
+| **Category** | ❌ Error Handling |
+| **Input** | First number: `abc` |
+
+**Expected Output:**
+
+```
+Error: Invalid number input. Please enter a valid numeric value.
+```
+
+---
+
+### Test Case TC-C07: Invalid Operator
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | TC-C07 |
+| **Scenario** | User enters an unsupported operator |
+| **Category** | ❌ Error Handling |
+| **Input** | First number: `10`, Second number: `5`, Operator: `%` |
+
+**Expected Output:**
+
+```
+Error: Invalid operator: '%'. Please use +, -, *, or /.
+```
+
+---
+
+### Test Case TC-C08: Decimal Numbers
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | TC-C08 |
+| **Scenario** | User performs addition with decimal numbers |
+| **Category** | ✅ Normal Operation |
+| **Input** | First number: `3.5`, Second number: `2.1`, Operator: `+` |
+
+**Expected Output:**
+
+```
+Result: 3.5 + 2.1 = 5.6
+```
+
+---
+
+### Test Case TC-C09: Negative Numbers
+
+| Field | Value |
+|-------|-------|
+| **Test ID** | TC-C09 |
+| **Scenario** | User performs addition with a negative number |
+| **Category** | ✅ Normal Operation |
+| **Input** | First number: `-5`, Second number: `3`, Operator: `+` |
+
+**Expected Output:**
+
+```
+Result: -5 + 3 = -2
+```
+
+---
+
+### How to Execute Normal Calculator Tests
+
+```bash
+# Compile
+javac src/Calculator.java
+
+# Run the calculator
+java -cp src Calculator
+```
+
+Enter the test inputs when prompted, compare the output with the expected results above.
+
+---
+
 ## Related Documentation
 
 - [Usage Guide](../getting-started/usage.md) — Input format, output format, and error message details from the user's perspective
 - [AgeCalculator API Reference](../api-reference/age-calculator.md) — Detailed documentation of the `calculateAge()` and `formatAge()` methods
+- [Calculator API Reference](../api-reference/calculator.md) — Detailed documentation of the `Calculator` class and its methods
 - [DateValidator API Reference](../api-reference/date-validator.md) — Detailed documentation of validation methods (`parseDate()`, `isValidDate()`, `isFutureDate()`) and the error message catalog
 - [DateUtils API Reference](../api-reference/date-utils.md) — Optional utility class for extended age calculations
 - [Architecture Overview](../architecture/overview.md) — Validation flowchart, class diagram, and error handling architecture

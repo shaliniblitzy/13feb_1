@@ -127,7 +127,11 @@ The Age Calculator uses direct `javac` compilation — no build tools are needed
 ### Compile Specific Files
 
 ```bash
+# Compile the Age Calculator and its validator
 javac src/AgeCalculator.java src/DateValidator.java
+
+# Compile the Normal Calculator
+javac src/Calculator.java
 ```
 
 ### Compile All Java Files at Once
@@ -148,9 +152,11 @@ Both commands produce `.class` bytecode files in the `src/` directory alongside 
 
 ---
 
-## Running the Application
+## Running the Applications
 
-After successful compilation, run the application with the following command:
+After successful compilation, run either application with the following commands:
+
+### Run the Age Calculator
 
 ```bash
 java -cp src AgeCalculator
@@ -158,19 +164,27 @@ java -cp src AgeCalculator
 
 The `-cp src` flag sets the **classpath** to the `src/` directory, telling the Java runtime where to find the compiled `.class` files.
 
-### What to Expect
-
 When the application starts, it prompts you to enter your Date of Birth:
-
-```
-Enter your Date of Birth (DD/MM/YYYY): 
-```
-
-Type your date of birth in `DD/MM/YYYY` format and press Enter. The application calculates and displays your exact age:
 
 ```
 Enter your Date of Birth (DD/MM/YYYY): 15/08/1998
 Your age is 27 years, 6 months, and 15 days.
+```
+
+### Run the Normal Calculator
+
+```bash
+java -cp src Calculator
+```
+
+When the calculator starts, it prompts you to enter two numbers and an operation:
+
+```
+=== Normal Calculator ===
+Enter first number: 10
+Enter second number: 5
+Select operation (+, -, *, /): +
+Result: 10 + 5 = 15
 ```
 
 For detailed information about input format, output format, error messages, and advanced usage, see the [Usage Guide](usage.md).
@@ -249,7 +263,8 @@ age-calculator/
 │   ├── api-reference/
 │   │   ├── age-calculator.md
 │   │   ├── date-validator.md
-│   │   └── date-utils.md
+│   │   ├── date-utils.md
+│   │   └── calculator.md
 │   ├── architecture/
 │   │   └── overview.md
 │   ├── testing/
@@ -259,7 +274,8 @@ age-calculator/
 └── src/
     ├── AgeCalculator.java
     ├── DateValidator.java
-    └── DateUtils.java             (optional enhancement)
+    ├── DateUtils.java             (optional enhancement)
+    └── Calculator.java
 ```
 
 ---
@@ -268,7 +284,8 @@ age-calculator/
 
 Now that you have the project compiled and running, explore the rest of the documentation:
 
-- **[Usage Guide](usage.md)** — How to use the application, input format, error messages, and worked examples
+- **[Usage Guide](usage.md)** — How to use the applications, input format, error messages, and worked examples
 - **[AgeCalculator API Reference](../api-reference/age-calculator.md)** — Detailed documentation of the `AgeCalculator` class and its methods
+- **[Calculator API Reference](../api-reference/calculator.md)** — Detailed documentation of the `Calculator` class and its methods
 - **[Architecture Overview](../architecture/overview.md)** — System design, class diagrams, and design decisions
 - **[README](../../README.md)** — Project overview and quick start

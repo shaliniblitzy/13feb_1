@@ -268,12 +268,67 @@ java -cp src AgeCalculator
 
 ---
 
+---
+
+## Normal Calculator
+
+In addition to the Age Calculator, this project includes a **Normal Calculator** that performs basic arithmetic operations. The calculator supports addition, subtraction, multiplication, and division with full input validation and error handling.
+
+### Launching the Normal Calculator
+
+From the **project root directory**, run:
+
+```bash
+java -cp src Calculator
+```
+
+### Sample Interaction
+
+```
+=== Normal Calculator ===
+Enter first number: 10
+Enter second number: 5
+Select operation (+, -, *, /): +
+Result: 10 + 5 = 15
+
+Do you want to perform another calculation? (yes/no): yes
+Enter first number: 15
+Enter second number: 4
+Select operation (+, -, *, /): /
+Result: 15 / 4 = 3.75
+
+Do you want to perform another calculation? (yes/no): no
+Thank you for using the Calculator. Goodbye!
+```
+
+### Supported Operations
+
+| Operator | Operation | Example |
+|----------|-----------|---------|
+| `+` | Addition | `10 + 5 = 15` |
+| `-` | Subtraction | `20 - 4 = 16` |
+| `*` | Multiplication | `6 * 7 = 42` |
+| `/` | Division | `15 / 4 = 3.75` |
+
+### Calculator Error Messages
+
+| Error Type | Example Input | Error Message |
+|-----------|---------------|---------------|
+| Invalid Number | `abc` | `Error: Invalid number input. Please enter a valid numeric value.` |
+| Invalid Operator | `%` | `Error: Invalid operator: '%'. Please use +, -, *, or /.` |
+| Division by Zero | `10 / 0` | `Error: Division by zero is not allowed.` |
+
+For detailed API documentation, see the [Calculator API Reference](../api-reference/calculator.md).
+
+---
+
 ## Related Documentation
 
-Explore the rest of the Age Calculator project documentation for deeper information on specific topics:
+Explore the rest of the project documentation for deeper information on specific topics:
 
 - [Installation Guide](installation.md) — JDK setup, environment variables, compilation, and troubleshooting
 - [AgeCalculator API Reference](../api-reference/age-calculator.md) — Detailed Javadoc for the `AgeCalculator` class and its methods
+- [Calculator API Reference](../api-reference/calculator.md) — Detailed Javadoc for the `Calculator` class and its methods
 - [DateValidator API Reference](../api-reference/date-validator.md) — Validation logic, parsing rules, and error handling details
 - [Test Cases](../testing/test-cases.md) — Full test matrix with all scenarios and expected results
 - [Architecture Overview](../architecture/overview.md) — Class diagrams, data flow, and design decisions

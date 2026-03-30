@@ -48,19 +48,21 @@ Your age is X years, Y months, and Z days.
 | **Build** | Direct `javac` compilation | No Maven or Gradle build tool required |
 | **Architecture Pattern** | Single-application, Object-Oriented design | Separation of concerns across dedicated classes |
 
-### Three-Class Architecture
+### Four-Class Architecture
 
-The application is composed of three classes, each with a single, well-defined responsibility:
+The project is composed of four classes, each with a single, well-defined responsibility:
 
-1. **`AgeCalculator`** — Main application class serving as the entry point. Handles console I/O, orchestrates the validation and calculation workflow, and formats the final output. This is the class that contains the `main(String[] args)` method.
+1. **`AgeCalculator`** — Main age calculator class serving as an entry point. Handles console I/O, orchestrates the validation and calculation workflow, and formats the final output for age calculation.
 
 2. **`DateValidator`** — Input validation class responsible for parsing `DD/MM/YYYY` strings into `LocalDate` objects, checking calendar validity (rejecting dates like February 31), and rejecting future dates. Called by `AgeCalculator` before any calculation begins.
 
 3. **`DateUtils`** *(optional enhancement)* — Reusable utility class providing additional age-related calculations such as total age in months, total age in days, next birthday date, and countdown to next birthday. This class can be used independently in other Java projects.
 
-> **Note:** The application has **no external dependencies** — it uses only the Java Standard Library. There is no database, no network communication, and no configuration files. It is a pure console I/O application.
+4. **`Calculator`** — A standalone normal arithmetic calculator class providing an interactive console interface for addition, subtraction, multiplication, and division. Features input validation, division by zero protection, decimal support, and continuous operation mode.
 
-*Source: `src/AgeCalculator.java`, `src/DateValidator.java`, `src/DateUtils.java`*
+> **Note:** The project has **no external dependencies** — it uses only the Java Standard Library. There is no database, no network communication, and no configuration files. Both applications are pure console I/O programs.
+
+*Source: `src/AgeCalculator.java`, `src/DateValidator.java`, `src/DateUtils.java`, `src/Calculator.java`*
 
 ---
 
@@ -87,22 +89,36 @@ classDiagram
         +nextBirthday(LocalDate) LocalDate
         +daysUntilNextBirthday(LocalDate) long
     }
+    class Calculator {
+        +main(String[] args) void
+        +calculate(double, double, String) double
+        +add(double, double) double
+        +subtract(double, double) double
+        +multiply(double, double) double
+        +divide(double, double) double
+        +parseNumber(String) double
+        +validateOperator(String) void
+        +formatExpression(double, double, String, double) String
+    }
     AgeCalculator --> DateValidator : validates input
     AgeCalculator --> DateUtils : optional utility
 ```
 
 ### Class Responsibilities
 
-**`AgeCalculator`** — The entry point of the application. The `main` method reads user input via `Scanner`, delegates validation to `DateValidator`, computes the age using `calculateAge(LocalDate, LocalDate)` which returns a `java.time.Period`, and formats the result via `formatAge(Period)` into the string `Your age is X years, Y months, and Z days.`. See the [AgeCalculator API Reference](../api-reference/age-calculator.md) for detailed method documentation.
+**`AgeCalculator`** — The entry point of the age calculator. The `main` method reads user input via `Scanner`, delegates validation to `DateValidator`, computes the age using `calculateAge(LocalDate, LocalDate)` which returns a `java.time.Period`, and formats the result via `formatAge(Period)` into the string `Your age is X years, Y months, and Z days.`. See the [AgeCalculator API Reference](../api-reference/age-calculator.md) for detailed method documentation.
 
 **`DateValidator`** — Responsible for all input validation. The `parseDate(String)` method converts a `DD/MM/YYYY` string into a `LocalDate` using `DateTimeFormatter`. The `isValidDate(String)` method checks whether a string represents a real calendar date. The `isFutureDate(LocalDate)` method rejects dates that occur after today. This class is called by `AgeCalculator.main()` before any calculation takes place. See the [DateValidator API Reference](../api-reference/date-validator.md) for detailed method documentation.
 
 **`DateUtils`** *(optional)* — A reusable utility class providing five convenience methods: `calculateAge(LocalDate)` returns a formatted age string, `totalMonths(LocalDate)` and `totalDays(LocalDate)` return the total age as a single number, `nextBirthday(LocalDate)` computes the next upcoming birthday date, and `daysUntilNextBirthday(LocalDate)` returns the countdown in days. This class can be used independently in other projects without the console I/O layer. See the [DateUtils API Reference](../api-reference/date-utils.md) for detailed method documentation.
 
+**`Calculator`** — A standalone normal arithmetic calculator providing an interactive console interface. Supports four operations: addition (`+`), subtraction (`-`), multiplication (`*`), and division (`/`). Features input validation via `parseNumber()` and `validateOperator()`, division by zero protection, decimal support, continuous operation mode, and clean number formatting. See the [Calculator API Reference](../api-reference/calculator.md) for detailed method documentation.
+
 ### Relationships
 
 - **`AgeCalculator` → `DateValidator`** — AgeCalculator depends on DateValidator for input validation. This is a **mandatory** dependency; the application cannot function without validation.
 - **`AgeCalculator` → `DateUtils`** — AgeCalculator can optionally use DateUtils for extended calculations such as total months, total days, and birthday countdown. This is an **optional** dependency for enhancement features.
+- **`Calculator`** — Calculator is a **standalone** class with no dependencies on the other classes. It handles its own input validation internally.
 - **`DateValidator` ↔ `DateUtils`** — These two classes are **independent** of each other. Neither imports nor references the other. They can be tested, modified, and reused in isolation.
 
 ---
@@ -350,10 +366,11 @@ The table below lists every error condition, its corresponding exception type, a
 
 ## See Also
 
-- [AgeCalculator API Reference](../api-reference/age-calculator.md) — Detailed method documentation for the main class
+- [AgeCalculator API Reference](../api-reference/age-calculator.md) — Detailed method documentation for the age calculator class
+- [Calculator API Reference](../api-reference/calculator.md) — Detailed method documentation for the normal calculator class
 - [DateValidator API Reference](../api-reference/date-validator.md) — Detailed validation method documentation
 - [DateUtils API Reference](../api-reference/date-utils.md) — Optional utility class documentation
-- [Usage Guide](../getting-started/usage.md) — How to run and use the application
+- [Usage Guide](../getting-started/usage.md) — How to run and use the applications
 - [Installation Guide](../getting-started/installation.md) — JDK setup and compilation
 - [Test Cases](../testing/test-cases.md) — Test matrix and scenario documentation
 - [Optional Enhancements](../enhancements/optional-features.md) — GUI, utility class, birthday countdown
