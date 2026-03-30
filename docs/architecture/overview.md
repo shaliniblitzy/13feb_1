@@ -114,7 +114,7 @@ The complete data flow pipeline from user input to console output consists of ei
 | Step | Stage | Description | Component |
 |------|-------|-------------|-----------|
 | 1 | **User Input** | User enters Date of Birth as a string in `DD/MM/YYYY` format via the console | `Scanner` in `AgeCalculator.main()` |
-| 2 | **Input Parsing** | `DateValidator.parseDate()` converts the string to a `LocalDate` object using `DateTimeFormatter.ofPattern("dd/MM/yyyy")` | `DateValidator` |
+| 2 | **Input Parsing** | `DateValidator.parseDate()` converts the string to a `LocalDate` object using `DateTimeFormatter.ofPattern("dd/MM/uuuu")` with `ResolverStyle.STRICT` | `DateValidator` |
 | 3 | **Format Validation** | If the string does not match the `DD/MM/YYYY` pattern, a `DateTimeParseException` is thrown | `DateValidator` |
 | 4 | **Calendar Validation** | If the date is not a real calendar date (e.g., `31/02/2020`), a `DateTimeParseException` is thrown | `DateValidator` |
 | 5 | **Temporal Validation** | `DateValidator.isFutureDate()` checks whether the parsed `LocalDate` is after `LocalDate.now()` | `DateValidator` |
@@ -191,7 +191,7 @@ flowchart TD
 
 ### Decision Points
 
-**Parse DD/MM/YYYY** — Uses `DateTimeFormatter.ofPattern("dd/MM/yyyy")` with strict resolver style. If the input string does not match the expected `DD/MM/YYYY` pattern, a `DateTimeParseException` is thrown immediately. Failure example: entering `hello` or `1998-08-15` triggers a format error.
+**Parse DD/MM/YYYY** — Uses `DateTimeFormatter.ofPattern("dd/MM/uuuu")` with `ResolverStyle.STRICT`. The proleptic year field `uuuu` is used instead of `yyyy` because `STRICT` mode requires it (see [DateValidator API — Class Signature](../api-reference/date-validator.md#class-signature) for details). If the input string does not match the expected `DD/MM/YYYY` pattern, a `DateTimeParseException` is thrown immediately. Failure example: entering `hello` or `1998-08-15` triggers a format error.
 
 **Valid Calendar Date?** — Checks whether the parsed date actually exists on the calendar. The strict resolver rejects dates such as `31/02/2020` (February has at most 29 days) and `29/02/2023` (2023 is not a leap year). Leap year dates like `29/02/2000` pass this check because 2000 is a valid leap year.
 
@@ -326,7 +326,7 @@ The table below lists every error condition, its corresponding exception type, a
 | Error Condition | Exception Type | User-Facing Message |
 |----------------|---------------|---------------------|
 | Invalid format (e.g., `hello`) | `DateTimeParseException` | `Error: Invalid date format. Please use DD/MM/YYYY.` |
-| Invalid calendar date (e.g., `31/02/2020`) | `DateTimeParseException` | `Error: Invalid date. The date does not exist on the calendar.` |
+| Invalid calendar date (e.g., `31/02/2020`) | `DateTimeParseException` | `Error: Invalid calendar date. The date does not exist on the calendar.` |
 | Future date (e.g., a date after today) | None (boolean check) | `Error: Date of Birth cannot be in the future.` |
 | Null or empty input | `IllegalArgumentException` | `Error: Input cannot be null or empty.` |
 | Unexpected error | `Exception` (catch-all) | `An unexpected error occurred: [message]` |
