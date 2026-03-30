@@ -124,7 +124,7 @@ The following test scenarios verify the correctness of the Age Calculator:
 | 1 | ✅ Normal DOB | `15/08/1998` | Displays age in years, months, and days |
 | 2 | ✅ Leap year DOB | `29/02/2000` | Correctly handles leap year birth date |
 | 3 | ❌ Invalid date | `31/02/2020` | Error: Invalid calendar date |
-| 4 | ❌ Future date | *(any future date)* | Error: Date cannot be in the future |
+| 4 | ❌ Future date | *(any future date)* | Error: Date of Birth cannot be in the future. |
 | 5 | ❌ Wrong format | `abc/xyz` | Error: Invalid date format |
 
 For detailed test scenarios, expected outputs, and edge cases, see [Test Cases](docs/testing/test-cases.md).
