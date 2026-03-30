@@ -94,10 +94,13 @@ All exceptions are caught internally and converted to user-friendly error messag
 
 | Exception | Condition | Handling |
 |-----------|-----------|----------|
-| `DateTimeParseException` | Invalid date format or non-existent calendar date | Caught internally; displays `Error: Invalid date format. Please use DD/MM/YYYY.` |
+| `DateTimeParseException` | Invalid date format (e.g., `"hello"`, `"1998-08-15"`) | Caught internally; displays `Error: Invalid date format. Please use DD/MM/YYYY.` |
+| `DateTimeParseException` | Invalid calendar date (e.g., `"31/02/2020"`) | Caught internally; displays `Error: Invalid calendar date. The date does not exist on the calendar.` (requires pre-validation to distinguish from format error — see [Exception Handling](#exception-handling)) |
 | `DateTimeException` | Broader date-related processing error | Caught internally; displays the exception message |
 | `IllegalArgumentException` | Validation constraints violated (e.g., future date) | Caught internally; displays `Error:` followed by the exception message |
 | `Exception` | Any unexpected error | Caught internally; displays `An unexpected error occurred:` followed by the message |
+
+> **Note:** Both format errors and invalid calendar dates throw `DateTimeParseException`. A single `catch (DateTimeParseException e)` block cannot distinguish between them. To provide distinct error messages for each case, use `DateValidator.isValidDate()` as a pre-validation step before calling `parseDate()`. See the [Exception Handling](#exception-handling) section and [DateValidator API](date-validator.md) for the recommended pattern.
 
 **Application Flow:**
 
@@ -122,10 +125,10 @@ Your age is 27 years, 6 months, and 15 days.
 
 ```
 Enter your Date of Birth (DD/MM/YYYY): 31/02/2020
-Error: Invalid date. The date does not exist on the calendar.
+Error: Invalid calendar date. The date does not exist on the calendar.
 ```
 
-February does not have 31 days in any year. The `DateValidator.parseDate()` method detects this and throws a `DateTimeParseException`, which is caught in `main()` and presented as a user-friendly error message.
+February does not have 31 days in any year. The `DateValidator.parseDate()` method detects this and throws a `DateTimeParseException`, which is caught in `main()` and presented as a user-friendly error message. Displaying a calendar-specific message (rather than the generic format error) requires pre-validation using `DateValidator.isValidDate()` — see the [Exception Handling](#exception-handling) section for details.
 
 **Example 3 — Error handling (future date):**
 
@@ -143,7 +146,7 @@ Enter your Date of Birth (DD/MM/YYYY): hello
 Error: Invalid date format. Please use DD/MM/YYYY.
 ```
 
-The string `hello` cannot be parsed by `java.time.format.DateTimeFormatter` with the `dd/MM/yyyy` pattern. The resulting `DateTimeParseException` is caught and a clear format instruction is displayed.
+The string `hello` cannot be parsed by `java.time.format.DateTimeFormatter` with the `dd/MM/uuuu` pattern (used with `ResolverStyle.STRICT` in `DateValidator`). The resulting `DateTimeParseException` is caught and a clear format instruction is displayed.
 
 ---
 
@@ -324,7 +327,8 @@ The `AgeCalculator` class uses a structured exception handling strategy where **
 
 | Exception Type | Source | User-Facing Message |
 |----------------|--------|---------------------|
-| `DateTimeParseException` | `DateValidator.parseDate()` — invalid format or non-existent calendar date | `Error: Invalid date format. Please use DD/MM/YYYY.` |
+| `DateTimeParseException` | `DateValidator.parseDate()` — invalid format | `Error: Invalid date format. Please use DD/MM/YYYY.` |
+| `DateTimeParseException` | `DateValidator.parseDate()` — invalid calendar date | `Error: Invalid calendar date. The date does not exist on the calendar.` (requires pre-validation) |
 | `DateTimeException` | Broader date processing errors from the `java.time` API | `Error:` followed by the exception message |
 | `IllegalArgumentException` | `calculateAge()` or `formatAge()` — null parameters or future birth date | `Error:` followed by the exception message |
 | `Exception` | Catch-all for any unexpected errors | `An unexpected error occurred:` followed by the exception message |
@@ -395,8 +399,10 @@ public class AgeCalculator {
             System.out.println(formatAge(age));
         } catch (DateTimeParseException e) {
             System.out.println("Error: Invalid date format. Please use DD/MM/YYYY.");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             System.out.println("Error: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("An unexpected error occurred: " + e.getMessage());
         } finally {
             scanner.close();
         }
@@ -448,7 +454,7 @@ The following table documents how `AgeCalculator` handles each of the five core 
 |---|----------|-------|-------------------|
 | 1 | ✅ Normal DOB | `15/08/1998` | Displays `Your age is 27 years, 6 months, and 15 days.` (age varies by current date) |
 | 2 | ✅ Leap year DOB | `29/02/2000` | Correctly parses the leap year date and calculates the age; `Period.between()` handles leap year boundaries automatically |
-| 3 | ❌ Invalid date | `31/02/2020` | Displays `Error: Invalid date. The date does not exist on the calendar.` — February never has 31 days |
+| 3 | ❌ Invalid date | `31/02/2020` | Displays `Error: Invalid calendar date. The date does not exist on the calendar.` — February never has 31 days |
 | 4 | ❌ Future date | `25/12/2030` | Displays `Error: Date of Birth cannot be in the future.` — the date has not yet occurred |
 | 5 | ❌ Wrong format | `hello` | Displays `Error: Invalid date format. Please use DD/MM/YYYY.` — the input cannot be parsed |
 

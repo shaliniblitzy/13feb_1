@@ -113,7 +113,7 @@ Error: Invalid date format. Please use DD/MM/YYYY.
 - **Error message:**
 
 ```
-Error: Invalid calendar date.
+Error: Invalid calendar date. The date does not exist on the calendar.
 ```
 
 - **Resolution:** Verify that the day is valid for the given month and year. Pay special attention to February (28 days in common years, 29 days in leap years) and months with 30 days (April, June, September, November).
@@ -201,7 +201,7 @@ A date that does not exist on the calendar:
 
 ```
 Enter your Date of Birth (DD/MM/YYYY): 31/02/2020
-Error: Invalid calendar date.
+Error: Invalid calendar date. The date does not exist on the calendar.
 ```
 
 February has at most 29 days (in a leap year) and only 28 days in a common year. The year 2020 is a leap year, but even then February only has 29 days — day 31 never exists in February. The application detects this and displays an error.

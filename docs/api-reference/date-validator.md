@@ -27,7 +27,7 @@ The class fulfils three core responsibilities:
 
 ### Capabilities
 
-- **Parses DD/MM/YYYY formatted strings** into `LocalDate` objects using `java.time.format.DateTimeFormatter` with the pattern `dd/MM/yyyy`
+- **Parses DD/MM/YYYY formatted strings** into `LocalDate` objects using `java.time.format.DateTimeFormatter` with the pattern `dd/MM/uuuu` and `ResolverStyle.STRICT`
 - **Validates calendar correctness** — rejects non-existent dates such as February 31 or February 29 in non-leap years
 - **Detects and rejects future dates** — compares the parsed date against `LocalDate.now()` to ensure the Date of Birth is not after today
 - **Provides meaningful error messages** for each failure type, enabling clear user feedback
@@ -41,7 +41,7 @@ import java.time.format.ResolverStyle;
 
 public class DateValidator {
     private static final DateTimeFormatter FORMATTER =
-        DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        DateTimeFormatter.ofPattern("dd/MM/uuuu")
             .withResolverStyle(ResolverStyle.STRICT);
 
     public static LocalDate parseDate(String input) { ... }
@@ -49,6 +49,8 @@ public class DateValidator {
     public static boolean isFutureDate(LocalDate date) { ... }
 }
 ```
+
+> **Important — `uuuu` vs `yyyy` with `ResolverStyle.STRICT`:** The pattern uses `uuuu` (proleptic year) instead of `yyyy` (year-of-era) because `ResolverStyle.STRICT` requires an era designator field (`G`) when using `yyyy`. Without an era in the pattern, the combination `yyyy` + `STRICT` throws `DateTimeParseException` for **all** inputs at runtime. The proleptic year field `uuuu` works correctly with `STRICT` mode because it does not depend on era information. This is a well-documented `java.time.format.DateTimeFormatter` behavior — always use `uuuu` when combining a year field with `ResolverStyle.STRICT`.
 
 ### Relationship with AgeCalculator
 
@@ -93,7 +95,7 @@ public static LocalDate parseDate(String input)
 
 **Description:**
 
-Parses a date string in `DD/MM/YYYY` format and returns a `java.time.LocalDate` object. Uses `DateTimeFormatter.ofPattern("dd/MM/yyyy")` with `ResolverStyle.STRICT` to ensure calendar validity — for example, February 30 and February 29 in non-leap years are both rejected. This is the primary entry point for converting raw user input into a validated date object.
+Parses a date string in `DD/MM/YYYY` format and returns a `java.time.LocalDate` object. Uses `DateTimeFormatter.ofPattern("dd/MM/uuuu")` with `ResolverStyle.STRICT` to ensure calendar validity — for example, February 30 and February 29 in non-leap years are both rejected. The proleptic year field `uuuu` is used instead of `yyyy` (year-of-era) because `STRICT` mode requires it — see the [Class Signature](#class-signature) note above for details. This is the primary entry point for converting raw user input into a validated date object.
 
 **Javadoc Tags:**
 
@@ -157,11 +159,13 @@ try {
     LocalDate date = DateValidator.parseDate("31/02/2020");
     // This line is never reached — February 31 does not exist
 } catch (DateTimeParseException e) {
-    System.out.println("Error: Invalid date. The date does not exist on the calendar.");
+    System.out.println("Error: Invalid calendar date. The date does not exist on the calendar.");
 }
 ```
 
 February never has 31 days in any year. The strict resolver detects this impossible date and throws a `DateTimeParseException`. The catch block displays a meaningful error message to the user.
+
+> **Note on Error Differentiation:** Both this example (invalid calendar date) and Example 4 (malformed input) throw `DateTimeParseException`, yet they display different error messages. In a production implementation, a single `catch (DateTimeParseException e)` block cannot distinguish between format errors and calendar errors from the exception alone. To provide distinct messages, use `isValidDate()` as a pre-validation step: first check format validity, then attempt parsing. See the [Usage with AgeCalculator](#usage-with-agecalculator) section for the recommended integration pattern.
 
 **Example 4 — Malformed input (edge case):**
 
@@ -174,7 +178,7 @@ try {
 }
 ```
 
-The string `"hello"` does not conform to the `dd/MM/yyyy` pattern at all. The `DateTimeFormatter` immediately throws a `DateTimeParseException`, and the user is instructed to use the correct format.
+The string `"hello"` does not conform to the `dd/MM/uuuu` pattern at all. The `DateTimeFormatter` immediately throws a `DateTimeParseException`, and the user is instructed to use the correct format.
 
 ---
 
@@ -217,12 +221,18 @@ Does not throw exceptions — returns `false` for all invalid inputs, including 
 | Year must be 4 digits | `15/08/1998` | `15/08/98` | Two-digit year is ambiguous |
 | Leap year correctness | `29/02/2000` | `29/02/2001` | 2001 is not a leap year |
 
+> **Note:** `isValidDate()` never throws exceptions — it returns `false` for all invalid inputs. The `try-catch` blocks in the examples below are included for consistency with the project's error handling pattern, but the method itself is safe to call without exception handling.
+
 **Example 1 — Normal valid date:**
 
 ```java
-boolean valid = DateValidator.isValidDate("15/08/1998");
-System.out.println("Is valid: " + valid);
-// Output: "Is valid: true"
+try {
+    boolean valid = DateValidator.isValidDate("15/08/1998");
+    System.out.println("Is valid: " + valid);
+    // Output: "Is valid: true"
+} catch (Exception e) {
+    System.out.println("An unexpected error occurred: " + e.getMessage());
+}
 ```
 
 The input `"15/08/1998"` matches the DD/MM/YYYY format and represents a real calendar date (August 15, 1998), so the method returns `true`.
@@ -230,9 +240,13 @@ The input `"15/08/1998"` matches the DD/MM/YYYY format and represents a real cal
 **Example 2 — Invalid calendar date:**
 
 ```java
-boolean valid = DateValidator.isValidDate("31/02/2020");
-System.out.println("Is valid: " + valid);
-// Output: "Is valid: false" (February 31 does not exist)
+try {
+    boolean valid = DateValidator.isValidDate("31/02/2020");
+    System.out.println("Is valid: " + valid);
+    // Output: "Is valid: false" (February 31 does not exist)
+} catch (Exception e) {
+    System.out.println("An unexpected error occurred: " + e.getMessage());
+}
 ```
 
 Although the format looks correct, February 31 is not a valid calendar date in any year. The method returns `false`.
@@ -240,9 +254,13 @@ Although the format looks correct, February 31 is not a valid calendar date in a
 **Example 3 — Wrong format:**
 
 ```java
-boolean valid = DateValidator.isValidDate("abc/xyz/2000");
-System.out.println("Is valid: " + valid);
-// Output: "Is valid: false"
+try {
+    boolean valid = DateValidator.isValidDate("abc/xyz/2000");
+    System.out.println("Is valid: " + valid);
+    // Output: "Is valid: false"
+} catch (Exception e) {
+    System.out.println("An unexpected error occurred: " + e.getMessage());
+}
 ```
 
 Non-numeric characters in the day and month positions cannot be parsed by the formatter. The method returns `false` without throwing an exception.
@@ -250,10 +268,14 @@ Non-numeric characters in the day and month positions cannot be parsed by the fo
 **Example 4 — Leap year edge case:**
 
 ```java
-boolean valid1 = DateValidator.isValidDate("29/02/2000");
-boolean valid2 = DateValidator.isValidDate("29/02/2001");
-System.out.println("29/02/2000 valid: " + valid1); // true (leap year)
-System.out.println("29/02/2001 valid: " + valid2); // false (not a leap year)
+try {
+    boolean valid1 = DateValidator.isValidDate("29/02/2000");
+    boolean valid2 = DateValidator.isValidDate("29/02/2001");
+    System.out.println("29/02/2000 valid: " + valid1); // true (leap year)
+    System.out.println("29/02/2001 valid: " + valid2); // false (not a leap year)
+} catch (Exception e) {
+    System.out.println("An unexpected error occurred: " + e.getMessage());
+}
 ```
 
 The year 2000 is a leap year (divisible by 400), so February 29 is valid. The year 2001 is **not** a leap year, so February 29 does not exist and the method returns `false`. This demonstrates the importance of leap year awareness in date validation.
@@ -349,7 +371,7 @@ The following table documents every error message that `DateValidator` methods c
 | Error Type | Trigger Condition | Example Input | Error Message | Resolution |
 |-----------|-------------------|---------------|---------------|------------|
 | Invalid Format | Input does not match the DD/MM/YYYY pattern | `"hello"`, `"1998-08-15"` | `Invalid date format. Please use DD/MM/YYYY.` | Re-enter using DD/MM/YYYY format with forward slashes |
-| Invalid Calendar Date | Date does not exist on the calendar | `"31/02/2020"`, `"29/02/2001"` | `Invalid date. The date does not exist on the calendar.` | Verify the date is real — check leap years and month lengths |
+| Invalid Calendar Date | Date does not exist on the calendar | `"31/02/2020"`, `"29/02/2001"` | `Invalid calendar date. The date does not exist on the calendar.` | Verify the date is real — check leap years and month lengths |
 | Future Date | Date is after the current system date | `"25/12/2030"` | `Date of Birth cannot be in the future.` | Enter a past or present date |
 | Empty Input | `null` or empty string provided | `""`, `null` | `Input cannot be null or empty.` | Provide a non-empty date string in DD/MM/YYYY format |
 
@@ -424,7 +446,7 @@ flowchart TD
 
 ### Pipeline Steps Explained
 
-1. **Parse DD/MM/YYYY** — The `parseDate()` method attempts to convert the input string into a `LocalDate` using `DateTimeFormatter.ofPattern("dd/MM/yyyy")`. If the string does not match the expected pattern (e.g., `"hello"` or `"1998-08-15"`), a **Format Error** is displayed immediately.
+1. **Parse DD/MM/YYYY** — The `parseDate()` method attempts to convert the input string into a `LocalDate` using `DateTimeFormatter.ofPattern("dd/MM/uuuu")` with `ResolverStyle.STRICT`. If the string does not match the expected pattern (e.g., `"hello"` or `"1998-08-15"`), a **Format Error** is displayed immediately.
 
 2. **Valid Calendar Date?** — The strict resolver (`ResolverStyle.STRICT`) verifies that the parsed date actually exists on the calendar. Dates like `31/02/2020` (February 31) or `29/02/2001` (February 29 in a non-leap year) fail this check, and an **Invalid Date Error** is displayed.
 

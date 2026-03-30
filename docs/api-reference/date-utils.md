@@ -175,8 +175,8 @@ try {
     LocalDate dob = LocalDate.of(1998, 8, 15);
     long months = DateUtils.totalMonths(dob);
     System.out.println("Total months: " + months);
-    // Output: "Total months: 318" (varies by current date)
-    // 26 years × 12 months + 6 months = 318 total months (approximate)
+    // Output: "Total months: 330" (varies by current date)
+    // 27 years × 12 months + 6 months = 330 total months (approximate)
 } catch (IllegalArgumentException e) {
     System.out.println("Error: " + e.getMessage());
 }
@@ -238,7 +238,7 @@ try {
     LocalDate dob = LocalDate.of(1998, 8, 15);
     long days = DateUtils.totalDays(dob);
     System.out.println("Total days: " + days);
-    // Output: "Total days: 9725" (varies by current date)
+    // Output: "Total days: 10061" (varies by current date)
     // Includes leap year days automatically
 } catch (IllegalArgumentException e) {
     System.out.println("Error: " + e.getMessage());
@@ -312,7 +312,7 @@ try {
     LocalDate dob = LocalDate.of(1998, 8, 15);
     LocalDate next = DateUtils.nextBirthday(dob);
     System.out.println("Next birthday: " + next);
-    // Output: "Next birthday: 2025-08-15" (varies by current date)
+    // Output: "Next birthday: 2026-08-15" (varies by current date)
     // If today is before August 15, returns this year's date
     // If today is after August 15, returns next year's date
 } catch (IllegalArgumentException e) {
@@ -434,7 +434,7 @@ public class MyApp {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             LocalDate dob = LocalDate.parse("15/08/1998", formatter);
 
-            System.out.println("Age: " + DateUtils.calculateAge(dob));
+            System.out.println("Your age is " + DateUtils.calculateAge(dob) + ".");
             System.out.println("Total months: " + DateUtils.totalMonths(dob));
             System.out.println("Total days: " + DateUtils.totalDays(dob));
             System.out.println("Next birthday: " + DateUtils.nextBirthday(dob));
@@ -450,14 +450,14 @@ public class MyApp {
 }
 ```
 
-**Expected output (values vary by current date):**
+**Expected output (values vary by current date — example assumes ~March 2026):**
 
 ```
-Age: 27 years, 6 months, and 15 days
-Total months: 318
-Total days: 9725
-Next birthday: 2025-08-15
-Days until birthday: 138
+Your age is 27 years, 6 months, and 15 days.
+Total months: 330
+Total days: 10061
+Next birthday: 2026-08-15
+Days until birthday: 166
 ```
 
 ### Combining with DateValidator

@@ -22,7 +22,9 @@ A Java console application that calculates a user's exact age in years, months, 
 
 - [Installation Guide](docs/getting-started/installation.md)
 - [Usage Guide](docs/getting-started/usage.md)
-- [API Reference](docs/api-reference/age-calculator.md)
+- [AgeCalculator API](docs/api-reference/age-calculator.md)
+- [DateValidator API](docs/api-reference/date-validator.md)
+- [DateUtils API](docs/api-reference/date-utils.md)
 - [Architecture](docs/architecture/overview.md)
 - [Test Cases](docs/testing/test-cases.md)
 - [Optional Enhancements](docs/enhancements/optional-features.md)
@@ -101,7 +103,7 @@ Error: Invalid date format. Please use DD/MM/YYYY.
 
 ```
 Enter your Date of Birth (DD/MM/YYYY): 31/02/2020
-Error: Invalid calendar date.
+Error: Invalid calendar date. The date does not exist on the calendar.
 ```
 
 **Future date:**
@@ -123,9 +125,9 @@ The following test scenarios verify the correctness of the Age Calculator:
 |---|----------|-------|-----------------|
 | 1 | ✅ Normal DOB | `15/08/1998` | Displays age in years, months, and days |
 | 2 | ✅ Leap year DOB | `29/02/2000` | Correctly handles leap year birth date |
-| 3 | ❌ Invalid date | `31/02/2020` | Error: Invalid calendar date |
+| 3 | ❌ Invalid date | `31/02/2020` | Error: Invalid calendar date. The date does not exist on the calendar. |
 | 4 | ❌ Future date | *(any future date)* | Error: Date of Birth cannot be in the future. |
-| 5 | ❌ Wrong format | `abc/xyz` | Error: Invalid date format |
+| 5 | ❌ Wrong format | `abc/xyz` | Error: Invalid date format. Please use DD/MM/YYYY. |
 
 For detailed test scenarios, expected outputs, and edge cases, see [Test Cases](docs/testing/test-cases.md).
 
