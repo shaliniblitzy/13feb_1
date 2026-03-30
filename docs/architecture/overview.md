@@ -285,7 +285,7 @@ The application uses a structured exception handling strategy where validation m
 - All exceptions are caught in `AgeCalculator.main()` using `try-catch` blocks.
 - `DateValidator` methods **throw** exceptions to signal validation failures — they do not print error messages themselves.
 - `AgeCalculator.main()` **catches** these exceptions and displays user-friendly error messages via `System.out.println()`.
-- Raw exception messages and stack traces are **never** exposed to the user.
+- Raw exception messages and stack traces are **never** exposed to the user on the primary validation path. For application-controlled exceptions (`IllegalArgumentException`) the message text is authored by the application code itself and is safe to display. The catch-all `Exception` handler uses a fully generic message to guard against unexpected exception types.
 
 ### Exception Propagation Chain
 
@@ -299,11 +299,18 @@ The following chain describes how each type of error propagates through the syst
 
 ### Code Example
 
-The following code illustrates the exception handling pattern used in the `main()` method:
+The following code illustrates the exception handling pattern used in the `main()` method. Note the two-step validation approach: `isValidDate()` performs a preliminary format check, while `parseDate()` performs strict calendar validation. This separation allows the application to display distinct error messages for format errors versus invalid calendar dates:
 
 ```java
 try {
+    // Step 1: Validate format (basic DD/MM/YYYY pattern check)
+    if (!DateValidator.isValidDate(input)) {
+        System.out.println("Error: Invalid date format. Please use DD/MM/YYYY.");
+        return;
+    }
+    // Step 2: Parse with strict resolver (catches invalid calendar dates like Feb 31)
     LocalDate birthDate = DateValidator.parseDate(input);
+    // Step 3: Check for future dates (boolean check, no exception thrown)
     if (DateValidator.isFutureDate(birthDate)) {
         System.out.println("Error: Date of Birth cannot be in the future.");
         return;
@@ -311,11 +318,15 @@ try {
     Period age = calculateAge(birthDate, LocalDate.now());
     System.out.println(formatAge(age));
 } catch (DateTimeParseException e) {
-    System.out.println("Error: Invalid date format. Please use DD/MM/YYYY.");
+    // If isValidDate passed but parseDate threw, the date has a valid format
+    // but does not exist on the calendar (e.g., 31/02/2020).
+    System.out.println("Error: Invalid calendar date. The date does not exist on the calendar.");
 } catch (IllegalArgumentException e) {
+    // Application-controlled messages (e.g., null input) — safe to display directly.
     System.out.println("Error: " + e.getMessage());
 } catch (Exception e) {
-    System.out.println("An unexpected error occurred: " + e.getMessage());
+    // Catch-all: uses a generic message to avoid exposing raw exception details.
+    System.out.println("An unexpected error occurred. Please try again.");
 }
 ```
 
@@ -329,9 +340,9 @@ The table below lists every error condition, its corresponding exception type, a
 | Invalid calendar date (e.g., `31/02/2020`) | `DateTimeParseException` | `Error: Invalid calendar date. The date does not exist on the calendar.` |
 | Future date (e.g., a date after today) | None (boolean check) | `Error: Date of Birth cannot be in the future.` |
 | Null or empty input | `IllegalArgumentException` | `Error: Input cannot be null or empty.` |
-| Unexpected error | `Exception` (catch-all) | `An unexpected error occurred: [message]` |
+| Unexpected error | `Exception` (catch-all) | `An unexpected error occurred. Please try again.` |
 
-> **Design Principle:** Never expose raw exception messages to the user. Every `catch` block translates the technical exception into a meaningful, human-readable error message that tells the user what went wrong and how to fix it.
+> **Design Principle:** Never expose raw exception messages or stack traces to the user on the primary validation path. The `DateTimeParseException` catch block uses a fixed, descriptive message. The `IllegalArgumentException` catch block displays `e.getMessage()` because these exceptions are thrown by application code with controlled, user-friendly message text. The catch-all `Exception` handler uses a fully generic message to guard against exposing details from unexpected exception types.
 
 *Source: `src/AgeCalculator.java` — `main()`, `src/DateValidator.java`*
 

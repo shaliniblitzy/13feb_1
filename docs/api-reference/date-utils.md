@@ -297,7 +297,7 @@ For persons born on February 29 (a leap year date), the behavior in non-leap yea
 
 **Returns:**
 
-`LocalDate` — The date of the next upcoming birthday. If today is the birthday, returns today. For February 29 birthdays in non-leap years, returns March 1 of the current or next year (Approach A).
+`LocalDate` — The date of the next upcoming birthday. If today is the birthday, returns next year's birthday date (the "next" birthday is always strictly in the future). For February 29 birthdays in non-leap years, returns March 1 of the applicable year (Approach A).
 
 **Throws:**
 
@@ -314,7 +314,7 @@ try {
     System.out.println("Next birthday: " + next);
     // Output: "Next birthday: 2026-08-15" (varies by current date)
     // If today is before August 15, returns this year's date
-    // If today is after August 15, returns next year's date
+    // If today is August 15 or later, returns next year's date
 } catch (IllegalArgumentException e) {
     System.out.println("Error: " + e.getMessage());
 }
@@ -346,12 +346,12 @@ public static long daysUntilNextBirthday(LocalDate birthDate)
 
 **Description:**
 
-Calculates the number of days remaining until the next birthday by combining `nextBirthday(birthDate)` with `java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), nextBirthday(birthDate))`. Returns `0` if today is the person's birthday. The maximum return value is `366` for leap year birthdays when using Approach A (March 1 fallback in non-leap years), or up to approximately `1461` (4 years) when using Approach B (next leap year).
+Calculates the number of days remaining until the next birthday by combining `nextBirthday(birthDate)` with `java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), nextBirthday(birthDate))`. Since `nextBirthday()` always returns a strictly future date (advancing to next year on the exact birthday), the minimum return value is `1` and the maximum is `366` for leap year birthdays when using Approach A (March 1 fallback in non-leap years), or up to approximately `1461` (4 years) when using Approach B (next leap year).
 
 **Javadoc Tags:**
 
 - `@param birthDate` the date of birth as a `LocalDate` instance
-- `@return` the number of days until the next birthday as a `long` value (range: 0–366)
+- `@return` the number of days until the next birthday as a `long` value (range: 1–366)
 - `@throws IllegalArgumentException` if `birthDate` is `null` or in the future
 
 **Parameters:**
@@ -362,7 +362,7 @@ Calculates the number of days remaining until the next birthday by combining `ne
 
 **Returns:**
 
-`long` — The number of days remaining until the next birthday. Returns `0` if today is the birthday. The typical range is 0–365 (or 0–366 in years that contain a leap day between now and the next birthday).
+`long` — The number of days remaining until the next birthday. Since `nextBirthday()` always returns a strictly future date, the return value is always at least `1`. On the exact birthday, the method returns `365` (or `366` in leap years) — indicating the count toward the *following* birthday. The typical range is 1–365 (or 1–366 in years that contain a leap day between now and the next birthday).
 
 **Throws:**
 
@@ -379,7 +379,7 @@ try {
     System.out.println("Days until next birthday: " + days);
     // Output varies by current date
     // If today is August 1: "Days until next birthday: 14"
-    // If today is August 15: "Days until next birthday: 0" (birthday is today)
+    // If today is August 15: "Days until next birthday: 365" (next birthday is next year)
 } catch (IllegalArgumentException e) {
     System.out.println("Error: " + e.getMessage());
 }
@@ -392,14 +392,15 @@ try {
     LocalDate dob = LocalDate.now().minusYears(25);
     long days = DateUtils.daysUntilNextBirthday(dob);
     System.out.println("Days until next birthday: " + days);
-    // Output: "Days until next birthday: 0"
-    // When today is the birthday, the method returns 0
+    // Output: "Days until next birthday: 365" (or 366 in a leap year)
+    // On the exact birthday, nextBirthday() advances to next year,
+    // so the countdown immediately reflects the next occurrence.
 } catch (IllegalArgumentException e) {
     System.out.println("Error: " + e.getMessage());
 }
 ```
 
-When today is the person's birthday, `nextBirthday()` returns today's date, and `ChronoUnit.DAYS.between(today, today)` returns `0`. This confirms the birthday countdown has reached zero.
+When today is the person's birthday, `nextBirthday()` returns the same date next year (since the condition uses `isBefore || isEqual` to advance past today), and `ChronoUnit.DAYS.between(today, nextYear)` returns `365` (or `366` in a leap year). This means the "next" birthday always refers to a strictly future date — on your birthday, the countdown immediately starts for the following year.
 
 ---
 
@@ -411,7 +412,7 @@ When today is the person's birthday, `nextBirthday()` returns today's date, and 
 | `totalMonths(LocalDate)` | `long` | Returns the total number of complete months since birth via `ChronoUnit.MONTHS` |
 | `totalDays(LocalDate)` | `long` | Returns the total number of days since birth via `ChronoUnit.DAYS` |
 | `nextBirthday(LocalDate)` | `LocalDate` | Returns the date of the next upcoming birthday with leap year awareness |
-| `daysUntilNextBirthday(LocalDate)` | `long` | Returns the number of days remaining until the next birthday (0–366) |
+| `daysUntilNextBirthday(LocalDate)` | `long` | Returns the number of days remaining until the next birthday (1–366) |
 
 All methods accept a single `LocalDate` parameter representing the date of birth, validate that it is not `null` and not in the future, and throw `IllegalArgumentException` on invalid input.
 

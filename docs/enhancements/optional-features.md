@@ -148,7 +148,7 @@ public class BirthdayCountdown {
                 }
             }
 
-            if (birthdayThisYear.isBefore(today)) {
+            if (birthdayThisYear.isBefore(today) || birthdayThisYear.isEqual(today)) {
                 birthdayThisYear = birthdayThisYear.plusYears(1);
                 // Re-check leap year for next year
                 if (birthDate.getMonthValue() == 2 && birthDate.getDayOfMonth() == 29) {
@@ -244,7 +244,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.time.LocalDate;
 import java.time.Period;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 public class AgeCalculatorGUI extends JFrame {
@@ -277,10 +276,17 @@ public class AgeCalculatorGUI extends JFrame {
 
     private void calculateAge() {
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            LocalDate birthDate = LocalDate.parse(dobField.getText(), formatter);
+            String input = dobField.getText();
 
-            if (birthDate.isAfter(LocalDate.now())) {
+            // Use DateValidator for strict validation (dd/MM/uuuu with ResolverStyle.STRICT)
+            if (!DateValidator.isValidDate(input)) {
+                resultLabel.setText("Error: Invalid date format. Please use DD/MM/YYYY.");
+                return;
+            }
+
+            LocalDate birthDate = DateValidator.parseDate(input);
+
+            if (DateValidator.isFutureDate(birthDate)) {
                 resultLabel.setText("Error: Date of Birth cannot be in the future.");
                 return;
             }
@@ -291,9 +297,9 @@ public class AgeCalculatorGUI extends JFrame {
                 age.getYears(), age.getMonths(), age.getDays()
             ));
         } catch (DateTimeParseException ex) {
-            resultLabel.setText("Error: Invalid date format. Please use DD/MM/YYYY.");
+            resultLabel.setText("Error: Invalid calendar date. The date does not exist on the calendar.");
         } catch (Exception ex) {
-            resultLabel.setText("Error: " + ex.getMessage());
+            resultLabel.setText("An unexpected error occurred. Please try again.");
         }
     }
 
@@ -313,13 +319,15 @@ public class AgeCalculatorGUI extends JFrame {
 ### Compilation and Running
 
 ```bash
-javac src/AgeCalculatorGUI.java
+javac src/AgeCalculatorGUI.java src/DateValidator.java
 java -cp src AgeCalculatorGUI
 ```
 
+> **Note:** The GUI depends on `DateValidator` for input validation. Both files must be compiled together.
+
 ### Architecture Note
 
-The Swing GUI replaces the `Scanner`-based console input with `JTextField` input and replaces `System.out.println()` output with `JLabel.setText()`. The core calculation logic remains the same — `Period.between(birthDate, LocalDate.now())` computes the age, and `String.format()` produces the output in the exact format:
+The Swing GUI replaces the `Scanner`-based console input with `JTextField` input and replaces `System.out.println()` output with `JLabel.setText()`. It delegates all input validation to `DateValidator`, ensuring the same strict parsing rules (`dd/MM/uuuu` with `ResolverStyle.STRICT`) used by the console application are applied in the GUI. The core calculation logic remains the same — `Period.between(birthDate, LocalDate.now())` computes the age, and `String.format()` produces the output in the exact format:
 
 ```
 Your age is X years, Y months, and Z days.
@@ -327,13 +335,14 @@ Your age is X years, Y months, and Z days.
 
 ### Error Handling in GUI
 
-All exceptions are caught within the `calculateAge()` method and displayed in the result label instead of crashing the application:
+All validation is delegated to `DateValidator`, and any exceptions are caught within the `calculateAge()` method and displayed in the result label instead of crashing the application:
 
-- **Invalid format** (`DateTimeParseException`): Displays `Error: Invalid date format. Please use DD/MM/YYYY.`
-- **Future date**: Displays `Error: Date of Birth cannot be in the future.`
-- **Any unexpected error**: Displays `Error:` followed by the exception message
+- **Invalid format**: `DateValidator.isValidDate()` returns `false`; displays `Error: Invalid date format. Please use DD/MM/YYYY.`
+- **Invalid calendar date** (`DateTimeParseException` from strict parsing): Displays `Error: Invalid calendar date. The date does not exist on the calendar.`
+- **Future date**: `DateValidator.isFutureDate()` returns `true`; displays `Error: Date of Birth cannot be in the future.`
+- **Any unexpected error**: Displays a generic message `An unexpected error occurred. Please try again.`
 
-This approach ensures the GUI remains responsive and user-friendly even when invalid input is provided.
+This approach ensures the GUI applies the same validation strength as the console application and remains responsive and user-friendly even when invalid input is provided.
 
 ---
 
@@ -373,7 +382,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import java.time.LocalDate;
 import java.time.Period;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 public class AgeCalculatorFX extends Application {
@@ -388,10 +396,17 @@ public class AgeCalculatorFX extends Application {
 
             calculateBtn.setOnAction(e -> {
                 try {
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                    LocalDate birthDate = LocalDate.parse(dobField.getText(), formatter);
+                    String input = dobField.getText();
 
-                    if (birthDate.isAfter(LocalDate.now())) {
+                    // Use DateValidator for strict validation (dd/MM/uuuu with ResolverStyle.STRICT)
+                    if (!DateValidator.isValidDate(input)) {
+                        resultLabel.setText("Error: Invalid date format. Please use DD/MM/YYYY.");
+                        return;
+                    }
+
+                    LocalDate birthDate = DateValidator.parseDate(input);
+
+                    if (DateValidator.isFutureDate(birthDate)) {
                         resultLabel.setText("Error: Date of Birth cannot be in the future.");
                         return;
                     }
@@ -402,9 +417,9 @@ public class AgeCalculatorFX extends Application {
                         age.getYears(), age.getMonths(), age.getDays()
                     ));
                 } catch (DateTimeParseException ex) {
-                    resultLabel.setText("Error: Invalid date format. Please use DD/MM/YYYY.");
+                    resultLabel.setText("Error: Invalid calendar date. The date does not exist on the calendar.");
                 } catch (Exception ex) {
-                    resultLabel.setText("Error: " + ex.getMessage());
+                    resultLabel.setText("An unexpected error occurred. Please try again.");
                 }
             });
 
@@ -441,9 +456,11 @@ For larger applications, JavaFX supports **FXML** — an XML-based markup langua
 ```bash
 # JavaFX requires module path configuration (JDK 11+)
 # For JDK 8, JavaFX is bundled and no additional setup is needed
-javac --module-path /path/to/javafx-sdk/lib --add-modules javafx.controls src/AgeCalculatorFX.java
+javac --module-path /path/to/javafx-sdk/lib --add-modules javafx.controls src/AgeCalculatorFX.java src/DateValidator.java
 java --module-path /path/to/javafx-sdk/lib --add-modules javafx.controls -cp src AgeCalculatorFX
 ```
+
+> **Note:** The GUI depends on `DateValidator` for input validation. Both files must be compiled together.
 
 > **JDK Version Note:** JavaFX was part of the JDK in Java 8 through 10. Starting with JDK 11, JavaFX was separated into its own SDK and must be downloaded separately from [openjfx.io](https://openjfx.io/). The `--module-path` and `--add-modules` flags are required for JDK 11 and later.
 

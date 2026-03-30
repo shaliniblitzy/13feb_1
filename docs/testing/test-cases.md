@@ -78,7 +78,9 @@ The application wraps all logic in `try-catch` blocks to ensure that no raw Java
 | Exception | Trigger | Expected Behavior |
 |-----------|---------|-------------------|
 | `DateTimeParseException` | Input does not match `DD/MM/YYYY` format or represents an invalid calendar date | Caught in `try-catch`; displays `Error: Invalid date format. Please use DD/MM/YYYY.` or `Error: Invalid calendar date. The date does not exist on the calendar.` |
-| `IllegalArgumentException` | Input is a future date, null, or empty | Caught in `try-catch`; displays `Error: Date of Birth cannot be in the future.` or a relevant validation message |
+| `IllegalArgumentException` | Input is `null` or empty | Caught in `try-catch`; displays `Error: Input cannot be null or empty.` |
+
+> **Note on future dates:** Future dates are **not** handled via an exception. The `DateValidator.isFutureDate()` method returns a `boolean` value (`true` if the date is in the future), and the `main()` method checks this return value with an `if` statement — displaying `Error: Date of Birth cannot be in the future.` without throwing or catching an exception. See the [Architecture Overview](../architecture/overview.md) for the exception propagation chain.
 
 Each error path documented in this file must display a **meaningful, user-friendly error message** rather than a raw exception.
 
@@ -99,7 +101,7 @@ The following table summarizes all test cases for the Age Calculator application
 | TC-005 | ❌ Leap Year | Non-leap year Feb 29 (invalid) | `29/02/2001` | `Error: Invalid calendar date. The date does not exist on the calendar.` | Fail (expected error) |
 | TC-006 | ❌ Invalid Date | February 31 | `31/02/2020` | `Error: Invalid calendar date. The date does not exist on the calendar.` | Fail (expected error) |
 | TC-007 | ❌ Invalid Date | February 30 | `30/02/2020` | `Error: Invalid calendar date. The date does not exist on the calendar.` | Fail (expected error) |
-| TC-008 | ❌ Invalid Date | Non-leap year Feb 29 | `29/02/2001` | `Error: Invalid calendar date. The date does not exist on the calendar.` | Fail (expected error) |
+| TC-008 | ❌ Invalid Date | Century non-leap year Feb 29 | `29/02/1900` | `Error: Invalid calendar date. The date does not exist on the calendar.` | Fail (expected error) |
 | TC-009 | ❌ Invalid Date | Month 13 | `15/13/1998` | `Error: Invalid calendar date. The date does not exist on the calendar.` | Fail (expected error) |
 | TC-010 | ❌ Invalid Date | Day 32 | `32/01/1998` | `Error: Invalid calendar date. The date does not exist on the calendar.` | Fail (expected error) |
 | TC-011 | ❌ Future Date | Date in the future | `25/12/2030` | `Error: Date of Birth cannot be in the future.` | Fail (expected error) |
@@ -321,15 +323,15 @@ Error: Invalid calendar date. The date does not exist on the calendar.
 
 ---
 
-### Test Case TC-008: Non-Leap Year February 29
+### Test Case TC-008: Century Non-Leap Year February 29
 
 | Field | Value |
 |-------|-------|
 | **Test ID** | TC-008 |
-| **Scenario** | User enters February 29 of a year that is not a leap year |
+| **Scenario** | User enters February 29 of a century year that is **not** a leap year (divisible by 100 but not by 400) |
 | **Category** | ❌ Invalid Date |
 | **Preconditions** | Application is compiled and running |
-| **Input** | `29/02/2001` |
+| **Input** | `29/02/1900` |
 
 **Expected Output:**
 
@@ -337,11 +339,11 @@ Error: Invalid calendar date. The date does not exist on the calendar.
 Error: Invalid calendar date. The date does not exist on the calendar.
 ```
 
-**Pass Criteria:** Application correctly identifies that 2001 is not a leap year (not divisible by 4) and rejects February 29.
+**Pass Criteria:** Application correctly identifies that 1900 is **not** a leap year — although it is divisible by 100, it is not divisible by 400 — and rejects February 29 with a meaningful error message. This validates the century rule of the Gregorian calendar.
 
-**Fail Criteria:** Application accepts the date or crashes.
+**Fail Criteria:** Application accepts the date, crashes, or displays a raw Java stack trace.
 
-**Notes:** This test case overlaps with TC-005 (placed in the Leap Year section) to verify the same behavior from the Invalid Date perspective. The year 2001 is not a leap year, so February only has 28 days.
+**Notes:** This test case complements TC-005 (`29/02/2001`, a simple non-leap year not divisible by 4) by exercising the **century exception rule**. Under the Gregorian calendar, a year is a leap year if divisible by 4, **except** for century years (divisible by 100), which must also be divisible by 400. For example, 2000 is a leap year (÷400) but 1900 is not (÷100 but not ÷400). The `DateTimeFormatter` with `ResolverStyle.STRICT` correctly enforces this rule.
 
 ---
 
