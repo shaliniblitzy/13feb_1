@@ -80,6 +80,8 @@ The application wraps all logic in `try-catch` blocks to ensure that no raw Java
 | `DateTimeParseException` | Input does not match `DD/MM/YYYY` format or represents an invalid calendar date | Caught in `try-catch`; displays `Error: Invalid date format. Please use DD/MM/YYYY.` or `Error: Invalid calendar date. The date does not exist on the calendar.` |
 | `IllegalArgumentException` | Input is `null` or empty | Caught in `try-catch`; displays `Error: Input cannot be null or empty.` |
 
+> **Note on null/empty inputs:** The `IllegalArgumentException` documented above is thrown by `DateValidator.parseDate()` when called directly with a `null` or empty string. However, in the complete `main()` flow, empty strings are intercepted first by the `DateValidator.isValidDate()` pre-check (which returns `false`), so the user sees `Error: Invalid date format. Please use DD/MM/YYYY.` rather than the `IllegalArgumentException` message. Test case [TC-016](#tc-016) reflects this runtime behavior through the `main()` method.
+
 > **Note on future dates:** Future dates are **not** handled via an exception. The `DateValidator.isFutureDate()` method returns a `boolean` value (`true` if the date is in the future), and the `main()` method checks this return value with an `if` statement — displaying `Error: Date of Birth cannot be in the future.` without throwing or catching an exception. See the [Architecture Overview](../architecture/overview.md) for the exception propagation chain.
 
 Each error path documented in this file must display a **meaningful, user-friendly error message** rather than a raw exception.

@@ -68,7 +68,7 @@ flowchart TD
     CheckDate -->|Valid| CheckFuture{Future Date?}
     CheckDate -->|Invalid| ErrDate[DateTimeParseException]
     CheckFuture -->|No - Valid| Return[Return LocalDate]
-    CheckFuture -->|Yes| ErrFuture[IllegalArgumentException]
+    CheckFuture -->|Yes| ErrFuture[Return true — Future Date]
 ```
 
 > **Design Note:** Each validation step catches a distinct category of invalid input. This layered approach ensures that the user receives a specific, actionable error message rather than a generic failure.

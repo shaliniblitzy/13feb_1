@@ -22,7 +22,7 @@
 ### Capabilities
 
 - **Console-based Date of Birth input** via `java.util.Scanner` — prompts the user with `Enter your Date of Birth (DD/MM/YYYY): ` and reads a single line of text
-- **Delegates input validation** to `DateValidator.parseDate()` and `DateValidator.isFutureDate()` — the `AgeCalculator` class itself does not contain any parsing or validation logic
+- **Delegates input validation** to `DateValidator.isValidDate()`, `DateValidator.parseDate()`, and `DateValidator.isFutureDate()` — the `AgeCalculator` class itself does not contain any parsing or validation logic
 - **Calculates exact age** in years, months, and days using `Period.between()` from the `java.time` API
 - **Formats output** as `Your age is X years, Y months, and Z days.` — the exact format specified for this application
 - **Handles exceptions** with meaningful error messages using `try-catch` blocks — every code path that may fail is wrapped in proper exception handling
@@ -98,7 +98,7 @@ All exceptions are caught internally and converted to user-friendly error messag
 | `DateTimeParseException` | Invalid calendar date (e.g., `"31/02/2020"`) | Caught internally; displays `Error: Invalid calendar date. The date does not exist on the calendar.` (requires pre-validation to distinguish from format error — see [Exception Handling](#exception-handling)) |
 | `DateTimeException` | Broader date-related processing error | Caught internally; displays the exception message |
 | `IllegalArgumentException` | Validation constraints violated (e.g., future date) | Caught internally; displays `Error:` followed by the exception message |
-| `Exception` | Any unexpected error | Caught internally; displays `An unexpected error occurred:` followed by the message |
+| `Exception` | Any unexpected error | Caught internally; displays `An unexpected error occurred. Please try again.` |
 
 > **Note:** Both format errors and invalid calendar dates throw `DateTimeParseException`. A single `catch (DateTimeParseException e)` block cannot distinguish between them. To provide distinct error messages for each case, use `DateValidator.isValidDate()` as a pre-validation step before calling `parseDate()`. See the [Exception Handling](#exception-handling) section and [DateValidator API](date-validator.md) for the recommended pattern.
 
@@ -106,11 +106,12 @@ All exceptions are caught internally and converted to user-friendly error messag
 
 1. **Prompt:** Display `Enter your Date of Birth (DD/MM/YYYY): ` to the console
 2. **Read input:** Capture the user's response via `Scanner.nextLine()`
-3. **Parse and validate:** Call `DateValidator.parseDate(input)` to convert the string to a `LocalDate`
-4. **Check for future date:** Call `DateValidator.isFutureDate(date)` to reject dates after today
-5. **Calculate age:** Call `calculateAge(birthDate, LocalDate.now())` to compute the `Period`
-6. **Format output:** Call `formatAge(age)` to build the result string
-7. **Display:** Print `Your age is X years, Y months, and Z days.` to the console
+3. **Pre-validate format:** Call `DateValidator.isValidDate(input)` to check basic DD/MM/YYYY format — if invalid, display a format error and stop
+4. **Parse with strict validation:** Call `DateValidator.parseDate(input)` to convert the string to a `LocalDate` with strict calendar validation
+5. **Check for future date:** Call `DateValidator.isFutureDate(date)` to reject dates after today
+6. **Calculate age:** Call `calculateAge(birthDate, LocalDate.now())` to compute the `Period`
+7. **Format output:** Call `formatAge(age)` to build the result string
+8. **Display:** Print `Your age is X years, Y months, and Z days.` to the console
 
 **Example 1 — Normal execution:**
 
@@ -331,7 +332,7 @@ The `AgeCalculator` class uses a structured exception handling strategy where **
 | `DateTimeParseException` | `DateValidator.parseDate()` — invalid calendar date | `Error: Invalid calendar date. The date does not exist on the calendar.` (requires pre-validation) |
 | `DateTimeException` | Broader date processing errors from the `java.time` API | `Error:` followed by the exception message |
 | `IllegalArgumentException` | `calculateAge()` or `formatAge()` — null parameters or future birth date | `Error:` followed by the exception message |
-| `Exception` | Catch-all for any unexpected errors | `An unexpected error occurred:` followed by the exception message |
+| `Exception` | Catch-all for any unexpected errors | `An unexpected error occurred. Please try again.` |
 
 ### Exception Handling Pattern
 
@@ -339,8 +340,14 @@ The following code block shows the `try-catch` structure used in the `main()` me
 
 ```java
 try {
+    // Step 1: Pre-validate format (basic DD/MM/YYYY pattern check)
+    if (!DateValidator.isValidDate(input)) {
+        System.out.println("Error: Invalid date format. Please use DD/MM/YYYY.");
+        return;
+    }
+    // Step 2: Parse with strict resolver (catches invalid calendar dates like Feb 31)
     LocalDate birthDate = DateValidator.parseDate(input);
-
+    // Step 3: Check for future dates (boolean check, no exception thrown)
     if (DateValidator.isFutureDate(birthDate)) {
         System.out.println("Error: Date of Birth cannot be in the future.");
         return;
@@ -349,15 +356,18 @@ try {
     Period age = calculateAge(birthDate, LocalDate.now());
     System.out.println(formatAge(age));
 } catch (DateTimeParseException e) {
-    System.out.println("Error: Invalid date format. Please use DD/MM/YYYY.");
+    // If isValidDate passed but parseDate threw, the date has a valid format
+    // but does not exist on the calendar (e.g., 31/02/2020).
+    System.out.println("Error: Invalid calendar date. The date does not exist on the calendar.");
 } catch (IllegalArgumentException e) {
     System.out.println("Error: " + e.getMessage());
 } catch (Exception e) {
-    System.out.println("An unexpected error occurred: " + e.getMessage());
+    // Catch-all: uses a generic message to avoid exposing raw exception details.
+    System.out.println("An unexpected error occurred. Please try again.");
 }
 ```
 
-> **Design Note:** The application follows OOP principles with a clear separation of exception handling responsibilities. Validation exceptions originate in `DateValidator`, calculation exceptions originate in `AgeCalculator`, and all are caught and handled uniformly in `main()`. This pattern keeps the individual methods clean and focused on their core logic while ensuring the user always receives a meaningful response.
+> **Design Note:** The application follows OOP principles with a clear separation of exception handling responsibilities. The two-step validation approach — `isValidDate()` pre-check followed by `parseDate()` strict parsing — allows the application to distinguish between format errors and invalid calendar dates, displaying specific error messages for each case. Validation exceptions originate in `DateValidator`, calculation exceptions originate in `AgeCalculator`, and all are caught and handled uniformly in `main()`. This pattern keeps the individual methods clean and focused on their core logic while ensuring the user always receives a meaningful response.
 
 ---
 
@@ -388,8 +398,14 @@ public class AgeCalculator {
         String input = scanner.nextLine();
 
         try {
+            // Step 1: Pre-validate format (basic DD/MM/YYYY pattern check)
+            if (!DateValidator.isValidDate(input)) {
+                System.out.println("Error: Invalid date format. Please use DD/MM/YYYY.");
+                return;
+            }
+            // Step 2: Parse with strict resolver (catches invalid calendar dates like Feb 31)
             LocalDate birthDate = DateValidator.parseDate(input);
-
+            // Step 3: Check for future dates (boolean check, no exception thrown)
             if (DateValidator.isFutureDate(birthDate)) {
                 System.out.println("Error: Date of Birth cannot be in the future.");
                 return;
@@ -398,11 +414,14 @@ public class AgeCalculator {
             Period age = calculateAge(birthDate, LocalDate.now());
             System.out.println(formatAge(age));
         } catch (DateTimeParseException e) {
-            System.out.println("Error: Invalid date format. Please use DD/MM/YYYY.");
+            // If isValidDate passed but parseDate threw, the date has a valid format
+            // but does not exist on the calendar (e.g., 31/02/2020).
+            System.out.println("Error: Invalid calendar date. The date does not exist on the calendar.");
         } catch (IllegalArgumentException e) {
             System.out.println("Error: " + e.getMessage());
         } catch (Exception e) {
-            System.out.println("An unexpected error occurred: " + e.getMessage());
+            // Catch-all: uses a generic message to avoid exposing raw exception details.
+            System.out.println("An unexpected error occurred. Please try again.");
         } finally {
             scanner.close();
         }

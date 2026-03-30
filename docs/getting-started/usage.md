@@ -38,7 +38,7 @@ The application expects your Date of Birth in the **DD/MM/YYYY** format. Each co
 
 The components are separated by forward slashes (`/`).
 
-> **Technical Note:** The application uses `java.time.format.DateTimeFormatter` with the pattern `dd/MM/yyyy` to parse your input into a `java.time.LocalDate` instance.
+> **Technical Note:** The application uses `java.time.format.DateTimeFormatter` with the pattern `dd/MM/uuuu` and `ResolverStyle.STRICT` to parse your input into a `java.time.LocalDate` instance. The proleptic year pattern `uuuu` is used instead of `yyyy` for compatibility with strict resolution — see [DateValidator API](../api-reference/date-validator.md) for details.
 
 ### Valid Input Examples
 
@@ -159,7 +159,7 @@ flowchart TD
 ### Flowchart Steps Explained
 
 1. **User Enters DOB** — The application prompts you and waits for input.
-2. **Parse DD/MM/YYYY** — The input string is parsed using `java.time.format.DateTimeFormatter` with the pattern `dd/MM/yyyy`. If parsing fails (wrong format, non-numeric characters), a **Format Error** is displayed.
+2. **Parse DD/MM/YYYY** — The input string is parsed using `java.time.format.DateTimeFormatter` with the pattern `dd/MM/uuuu` and `ResolverStyle.STRICT`. If parsing fails (wrong format, non-numeric characters), a **Format Error** is displayed.
 3. **Valid Calendar Date?** — The parsed date is checked to confirm it actually exists on the calendar. For example, `31/02/2020` parses structurally but February 31 does not exist, so an **Invalid Date Error** is displayed.
 4. **Future Date?** — The validated date is compared against the current system date (`java.time.LocalDate.now()`). If the entered date is after today, a **Future Date Error** is displayed.
 5. **Calculate Age via Period.between** — If all validations pass, `java.time.Period.between(birthDate, currentDate)` computes the exact difference in years, months, and days.
@@ -226,7 +226,7 @@ Enter your Date of Birth (DD/MM/YYYY): hello
 Error: Invalid date format. Please use DD/MM/YYYY.
 ```
 
-The string `hello` cannot be parsed by `java.time.format.DateTimeFormatter` with the `dd/MM/yyyy` pattern. The application catches the parsing exception and displays a clear error message directing you to use the correct format.
+The string `hello` cannot be parsed by `java.time.format.DateTimeFormatter` with the `dd/MM/uuuu` pattern. The application catches the parsing exception and displays a clear error message directing you to use the correct format.
 
 ---
 
